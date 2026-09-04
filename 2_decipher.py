@@ -5,17 +5,47 @@ encoded = """
    [6::GZ_7_VS::ok] | [99::IGNORE_ME::bad] | %%noise%%
 """
 
-###############################################################
-"""
-1. Part of the real message is inside the the '[' and ']' brackets.
-2. Each fragment inside the brackets has a number, jumbled text of the message, and 'ok'. Focus on only those fragments. The '::' are just separating these parts in the fragment 
-3. To find the actual message in every fragment,take every letter in the jumbled message, and shift it backward by the number part in that fragment
-For example, if the number is 3 and the jumbled message is ABC, then the actual message is XYZ.
-Similarly, if the number is 5 and the jumbled message is ABC, then the actual message is VWX.
-4. Ignore any fragment that has 'bad' instead of 'ok'.
-5. Once you have decoded all the fragments, combine them in the order of their numbers to get the final message. First comes the fragment with number 1, then 2, and so on.
-"""
-
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+parts = encoded.split("|")
+decoded_parts = []
 
+for part in parts:
+    part = part.strip()
+    if not part.startswith("["):
+        continue
+
+    inside = part[1:-1]
+    pieces = inside.split("::")
+
+    if len(pieces) != 3:
+        continue
+
+    status = pieces[2]
+    if status != "ok":
+        continue
+
+    num = int(pieces[0])
+    text = pieces[1]
+
+    decoded = ""
+    for ch in text:
+        if ch in alphabet:
+            old_index = alphabet.index(ch)
+            decoded = decoded + alphabet[old_index - num]
+        else:
+            decoded = decoded + ch
+
+    # the underscore was used as a space in the hidden message
+    decoded = decoded.replace("_", " ")
+
+    decoded_parts.append((num, decoded))
+
+decoded_parts.sort()
+
+final_message = ""
+for num, decoded in decoded_parts:
+    final_message = final_message + decoded + " "
+
+final_message = final_message.strip()
+print(final_message)
